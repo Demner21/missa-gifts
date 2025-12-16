@@ -9,6 +9,7 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "vue": "^3.5.0",
     "vue-i18n": "^9.14.0"
   },
