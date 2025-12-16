@@ -55,6 +55,22 @@ const messages = {
       changeConfirm:
         'Cambiar el tipo de sorteo reiniciará el estado actual. ¿Quieres continuar?',
     },
+    instructions: {
+      phaseLabel: 'Fase',
+      phaseRaffle: 'Sorteo',
+      phaseInstructions: 'Instrucciones',
+      phaseComplete: 'Instrucciones completadas',
+      startPhase: 'Iniciar fase de instrucciones',
+      assignOne: 'Asignar instrucción',
+      nextParticipantLabel: 'Siguiente participante',
+      currentGiftLabel: 'Regalo actual',
+      instructionLabel: 'Instrucción',
+      resultingGiftLabel: 'Regalo final',
+      allDone: 'Todas las instrucciones han sido asignadas.',
+      randomSelected: 'Instrucción seleccionada al azar',
+      remainingCount: 'Instrucciones restantes: {count}',
+      noRemaining: 'No quedan instrucciones disponibles.',
+    },
   },
   en: {
     app: {
@@ -109,6 +125,22 @@ const messages = {
       primaryDescription: 'Raffle with {count} predefined participants.',
       changeConfirm:
         'Changing the raffle type will reset the current state. Do you want to continue?',
+    },
+    instructions: {
+      phaseLabel: 'Phase',
+      phaseRaffle: 'Raffle',
+      phaseInstructions: 'Instructions',
+      phaseComplete: 'Instructions complete',
+      startPhase: 'Start instructions phase',
+      assignOne: 'Assign instruction',
+      nextParticipantLabel: 'Next participant',
+      currentGiftLabel: 'Current gift',
+      instructionLabel: 'Instruction',
+      resultingGiftLabel: 'Final gift',
+      allDone: 'All instructions have been assigned.',
+      randomSelected: 'Instruction selected at random',
+      remainingCount: 'Remaining instructions: {count}',
+      noRemaining: 'No instructions remaining.',
     },
   },
 } as const;

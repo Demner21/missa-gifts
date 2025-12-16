@@ -1,0 +1,98 @@
+[
+  {
+    "id": "swap-random-2",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona que siempre anda en el booms",
+    "textEn": "Swap your gift with the person who always hangs out in the booms."
+  },
+  {
+    "id": "swap-random-3",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona que crees que para yendo a \"Casita\" a tomar Pisco.",
+    "textEn": "Swap your gift with the person you think is going home to drink Pisco."
+  },
+  {
+    "id": "shift-right-3",
+    "type": "shift_right",
+    "textEs": "Todos mueven su regalo 3 posiciones a la derecha.",
+    "textEn": "Everyone moves their gift 3 positions to the right."
+  },
+  {
+    "id": "shift-left-2",
+    "type": "shift_left",
+    "textEs": "Todos mueven su regalo 2 posiciones a la izquierda.",
+    "textEn": "Everyone moves their gift 2 positions to the left."
+  },
+  {
+    "id": "swap-random-1",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona que crees que es la favorita de mamita Helena.",
+    "textEn": "Swap your gift with the person you think is mamita Helena's favorite."
+  },
+  {
+    "id": "swap-black-clothes",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con alguien que tenga una prenda pequeña de color negro.",
+    "textEn": "Swap your gift with someone wearing something black."
+  },
+  {
+    "id": "swap-wally",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona que crees que Wally anda pulseando.",
+    "textEn": "Swap your gift with the person you think Wally is hanging out with."
+  },
+  {
+    "id": "swap-smile",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona que crees que te apoyó un montón este año.",
+    "textEn": "Swap your gift with the person who supported you a lot this year."
+  },
+  {
+    "id": "swap-first-speaker",
+    "type": "swap_first",
+    "textEs": "Escoge una persona y jueguen pidra-papel-tijera, la persona que gane escoge con que regalo quedarse (solo entre tu y las persona que escogiste).",
+    "textEn": "Choose a person and play rock-paper-scissors, the winner chooses which gift to keep (only between you and the person you chose)."
+  },
+  {
+    "id": "rotate-all-1",
+    "type": "rotate_all",
+    "textEs": "Todos pasan su regalo a la siguiente persona (derecha).",
+    "textEn": "Everyone passes their gift to the next person (right)."
+  },
+  {
+    "id": "rotate-all-reverse",
+    "type": "rotate_all_reverse",
+    "textEs": "Todos pasan su regalo a la persona anterior (izquierda).",
+    "textEn": "Everyone passes their gift to the previous person (left)."
+  },
+  {
+    "id": "swap-glasses",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con alguien que use lentes (o que está ciega ... date cuena oee ...XD).",
+    "textEn": "Swap your gift with someone wearing glasses (or who is literally blind XD)."
+  },
+  {
+    "id": "swap-red",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con alguien que tenga algo grande de color rojo.",
+    "textEn": "Swap your gift with someone wearing something red."
+  },
+  {
+    "id": "swap-name-letter",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con alguien cuyo nombre empiece con la misma letra que el tuyo [pasar a la siguiente letra hasta encontrar a alguien].",
+    "textEn": "Swap your gift with someone whose name starts with the same letter as yours [move to the next letter until you find someone]."
+  },
+  {
+    "id": "swap-youngest",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona más joven.",
+    "textEn": "Swap your gift with the youngest person."
+  },
+  {
+    "id": "swap-oldest",
+    "type": "swap_random",
+    "textEs": "Intercambia tu regalo con la persona de mayor edad.",
+    "textEn": "Swap your gift with the oldest person."
+  }
+]

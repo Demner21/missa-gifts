@@ -73,6 +73,25 @@ body {
   gap: 0.75rem;
 }
 
+.phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.95);
+  font-size: 0.78rem;
+}
+
+.phase-label {
+  color: var(--muted);
+}
+
+.phase-value {
+  font-weight: 600;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -164,6 +183,67 @@ body {
 .raffle-chip.active {
   border-color: rgba(248, 250, 252, 0.7);
   background: radial-gradient(circle at top left, rgba(248, 113, 22, 0.3), rgba(15, 23, 42, 0.98));
+}
+
+.instructions-panel {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(30, 64, 175, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.instructions-next {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.instructions-remaining {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.instruction-result-card {
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(129, 140, 248, 0.6);
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.instruction-random-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.instruction-participant {
+  margin: 0 0 0.1rem;
+  font-weight: 600;
+}
+
+.instruction-line {
+  margin: 0;
+}
+
+.instruction-label {
+  color: var(--muted);
+}
+
+.instruction-value {
+  margin-left: 0.25rem;
+}
+
+.instructions-complete-text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .field-group {

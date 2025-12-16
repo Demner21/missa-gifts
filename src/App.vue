@@ -6,6 +6,16 @@
         <p>{{ t('app.subtitle') }}</p>
       </div>
       <div class="header-right">
+        <div class="phase-pill" :data-phase="phase">
+          <span class="phase-label">{{ t('instructions.phaseLabel') }}</span>
+          <span class="phase-value">
+            <span v-if="phase === 'raffle'">{{ t('instructions.phaseRaffle') }}</span>
+            <span v-else-if="phase === 'instructions'">
+              {{ t('instructions.phaseInstructions') }}
+            </span>
+            <span v-else>{{ t('instructions.phaseComplete') }}</span>
+          </span>
+        </div>
         <div class="badge">
           <span class="badge-dot" />
           <span>{{ t('app.techBadge') }}</span>
@@ -108,10 +118,31 @@
         >
           {{ t('controls.reset') }}
         </button>
+        <button
+          v-if="phase === 'raffle'"
+          class="btn btn-secondary"
+          type="button"
+          @click="startInstructionsPhase"
+          :disabled="!isRaffleComplete"
+        >
+          {{ t('instructions.startPhase') }}
+        </button>
+        <button
+          v-else
+          class="btn btn-primary"
+          type="button"
+          @click="assignNextInstruction"
+          :disabled="isAssignInstructionDisabled"
+        >
+          {{ t('instructions.assignOne') }}
+        </button>
       </div>
     </section>
 
-    <section class="layout">
+    <section
+      v-if="phase === 'raffle'"
+      class="layout"
+    >
       <div class="column">
         <header class="column-header">
           <h2 class="column-title">{{ t('participants.columnTitle') }}</h2>
@@ -227,12 +258,76 @@
         <p v-else class="empty">{{ t('assignments.empty') }}</p>
       </div>
     </section>
+
+    <section
+      v-else
+      class="layout"
+    >
+      <div class="column">
+        <header class="column-header">
+          <h2 class="column-title">{{ t('instructions.phaseInstructions') }}</h2>
+          <span class="column-count">{{ instructionIndex }} / {{ assignments.length }}</span>
+        </header>
+
+        <div class="instructions-panel">
+          <p class="instructions-remaining">
+            {{ t('instructions.remainingCount', { count: remainingInstructions.length }) }}
+          </p>
+          <p
+            v-if="!remainingInstructions.length && phase === 'instructions'"
+            class="instructions-complete-text"
+          >
+            {{ t('instructions.noRemaining') }}
+          </p>
+
+          <p v-if="nextInstructionParticipant && phase === 'instructions'" class="instructions-next">
+            <strong>{{ t('instructions.nextParticipantLabel') }}:</strong>
+            &nbsp;{{ nextInstructionParticipant.participantName }}
+          </p>
+
+          <div v-if="lastInstructionResult" class="instruction-result-card">
+            <p class="instruction-participant">
+              {{ lastInstructionResult.participantName }}
+            </p>
+            <p class="instruction-random-hint">
+              {{ t('instructions.randomSelected') }}
+            </p>
+            <p class="instruction-line">
+              <span class="instruction-label">{{ t('instructions.currentGiftLabel') }}:</span>
+              <span class="instruction-value">
+                #{{ lastInstructionResult.initialGiftId }} ·
+                {{ lastInstructionResult.initialGiftLabel }}
+              </span>
+            </p>
+            <p class="instruction-line">
+              <span class="instruction-label">{{ t('instructions.instructionLabel') }}:</span>
+              <span class="instruction-value">{{ lastInstructionResult.instructionText }}</span>
+            </p>
+            <p class="instruction-line">
+              <span class="instruction-label">{{ t('instructions.resultingGiftLabel') }}:</span>
+              <span class="instruction-value">
+                #{{ lastInstructionResult.resultingGiftId }} ·
+                {{ lastInstructionResult.resultingGiftLabel }}
+              </span>
+            </p>
+          </div>
+
+          <p
+            v-if="phase === 'instructions-complete'"
+            class="instructions-complete-text"
+          >
+            {{ t('instructions.allDone') }}
+          </p>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import rawInstructions from './instructions.json';
 
 type Participant = { id: number; name: string };
 type Gift = { id: number; label: string };
@@ -279,6 +374,41 @@ const rafflePresets: RafflePreset[] = [
   },
 ];
 
+type InstructionType =
+  | 'keep'
+  | 'swap_next'
+  | 'swap_prev'
+  | 'swap_random'
+  | 'shift_right'
+  | 'shift_left'
+  | 'swap_last'
+  | 'swap_first'
+  | 'rotate_all'
+  | 'rotate_all_reverse'
+  | 'swap_youngest'
+  | 'swap_oldest';
+
+type InstructionConfig = {
+  id: string;
+  type: InstructionType;
+  textEs: string;
+  textEn: string;
+};
+
+type Phase = 'raffle' | 'instructions' | 'instructions-complete';
+
+type InstructionResult = {
+  participantId: number;
+  participantName: string;
+  initialGiftId: number;
+  initialGiftLabel: string;
+  instructionText: string;
+  resultingGiftId: number;
+  resultingGiftLabel: string;
+};
+
+const instructions = rawInstructions as InstructionConfig[];
+
 const giftCount = ref(15);
 const participantCount = ref(15);
 
@@ -298,6 +428,13 @@ const activeGift = ref<Gift | null>(null);
 
 const selectedRaffleTypeId = ref<RaffleTypeId>('custom');
 
+const phase = ref<Phase>('raffle');
+const instructionIndex = ref(0);
+const ownership = ref<Record<number, number>>({});
+const lastInstructionResult = ref<InstructionResult | null>(null);
+const isInstructionSpinning = ref(false);
+const remainingInstructions = ref<InstructionConfig[]>([]);
+
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value as 'es' | 'en');
 
@@ -306,12 +443,17 @@ function setLocale(next: 'es' | 'en') {
 }
 
 const isDrawDisabled = computed(() => {
+  if (phase.value !== 'raffle') return true;
   if (isSpinning.value) return true;
   if (participantCount.value < giftCount.value) return true;
   if (!remainingParticipants.value.length) return true;
   if (!remainingGifts.value.length) return true;
   return false;
 });
+
+const isRaffleComplete = computed(
+  () => remainingGifts.value.length === 0 && assignments.value.length > 0,
+);
 
 const currentGift = computed(() => activeGift.value ?? remainingGifts.value[0] ?? null);
 
@@ -320,6 +462,19 @@ const rouletteDisplayName = computed(() => {
   const p = spinParticipants.value[rouletteIndex.value % spinParticipants.value.length];
   return displayParticipantName(p.id, p.name);
 });
+
+const nextInstructionParticipant = computed(() => {
+  if (phase.value !== 'instructions') return null;
+  return assignments.value[instructionIndex.value] ?? null;
+});
+
+const isAssignInstructionDisabled = computed(
+  () =>
+    phase.value !== 'instructions' ||
+    instructionIndex.value >= assignments.value.length ||
+    isInstructionSpinning.value ||
+    remainingInstructions.value.length === 0,
+);
 
 function displayParticipantName(id: number, rawName: string): string {
   const trimmed = rawName.trim();
@@ -348,6 +503,12 @@ function resetCoreState() {
   spinParticipants.value = [];
   isSpinning.value = false;
   activeGift.value = null;
+  phase.value = 'raffle';
+  instructionIndex.value = 0;
+  ownership.value = {};
+  lastInstructionResult.value = null;
+  isInstructionSpinning.value = false;
+  remainingInstructions.value = [];
 }
 
 function loadPreset(id: RafflePresetId) {
@@ -385,6 +546,21 @@ function applyRaffleType(id: RaffleTypeId) {
   } else {
     loadPreset(id);
   }
+}
+
+function startInstructionsPhase() {
+  if (!isRaffleComplete.value) return;
+
+  const map: Record<number, number> = {};
+  for (const a of assignments.value) {
+    map[a.participantId] = a.giftId;
+  }
+
+  ownership.value = map;
+  instructionIndex.value = 0;
+  lastInstructionResult.value = null;
+  remainingInstructions.value = [...instructions];
+  phase.value = 'instructions';
 }
 
 function drawNext() {
@@ -477,6 +653,77 @@ function drawNext() {
   };
 
   spinStep();
+}
+
+function assignNextInstruction() {
+  if (phase.value !== 'instructions') return;
+  if (instructionIndex.value >= assignments.value.length) return;
+
+  if (isInstructionSpinning.value) return;
+  if (!remainingInstructions.value.length) {
+    phase.value = 'instructions-complete';
+    return;
+  }
+  isInstructionSpinning.value = true;
+
+  const current = assignments.value[instructionIndex.value];
+  const participantId = current.participantId;
+  const participantName = current.participantName;
+
+  const map: Record<number, number> = { ...ownership.value };
+
+  if (!(participantId in map)) {
+    map[participantId] = current.giftId;
+  }
+
+  const beforeGiftId = map[participantId];
+
+  const n = assignments.value.length;
+  const randomIndex = Math.floor(Math.random() * remainingInstructions.value.length);
+  const [rawInstruction] = remainingInstructions.value.splice(randomIndex, 1);
+
+  if (rawInstruction.type === 'swap_next' || rawInstruction.type === 'swap_prev') {
+    const offset = rawInstruction.type === 'swap_next' ? 1 : -1;
+    const targetIndex = (instructionIndex.value + offset + n) % n;
+    const target = assignments.value[targetIndex];
+    const targetId = target.participantId;
+
+    if (!(targetId in map)) {
+      map[targetId] = target.giftId;
+    }
+
+    const temp = map[participantId];
+    map[participantId] = map[targetId];
+    map[targetId] = temp;
+  }
+
+  ownership.value = map;
+
+  const instructionText = currentLocale.value === 'es'
+    ? rawInstruction.textEs
+    : rawInstruction.textEn;
+
+  const resultingGiftId = ownership.value[participantId];
+
+  lastInstructionResult.value = {
+    participantId,
+    participantName,
+    initialGiftId: beforeGiftId,
+    initialGiftLabel: t('gifts.giftLabel', { id: beforeGiftId }),
+    instructionText,
+    resultingGiftId,
+    resultingGiftLabel: t('gifts.giftLabel', { id: resultingGiftId }),
+  };
+
+  instructionIndex.value += 1;
+
+  if (instructionIndex.value >= assignments.value.length) {
+    phase.value = 'instructions-complete';
+  }
+
+  window.setTimeout(() => {
+    isInstructionSpinning.value = false;
+  }, 500);
 }
 
 function resetRaffle() {
