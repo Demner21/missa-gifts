@@ -33,6 +33,34 @@
     </header>
 
     <section class="controls">
+      <div class="field-group raffle-type-group">
+        <span class="field-label">{{ t('raffle.typeLabel') }}</span>
+        <div class="raffle-type-chips">
+          <button
+            type="button"
+            class="raffle-chip"
+            :class="{ active: selectedRaffleTypeId === 'custom' }"
+            @click="applyRaffleType('custom')"
+          >
+            <span class="raffle-chip-title">{{ t('raffle.customName') }}</span>
+            <span class="raffle-chip-subtitle">{{ t('raffle.customDescription') }}</span>
+          </button>
+          <button
+            v-for="preset in rafflePresets"
+            :key="preset.id"
+            type="button"
+            class="raffle-chip"
+            :class="{ active: selectedRaffleTypeId === preset.id }"
+            @click="applyRaffleType(preset.id)"
+          >
+            <span class="raffle-chip-title">{{ t(preset.nameKey) }}</span>
+            <span class="raffle-chip-subtitle">
+              {{ t(preset.descriptionKey, { count: preset.participants.length }) }}
+            </span>
+          </button>
+        </div>
+      </div>
+
       <div class="field-group">
         <span class="field-label">{{ t('controls.giftsLabel') }}</span>
         <div class="field-input">
@@ -42,7 +70,7 @@
             min="1"
             max="500"
             v-model.number="giftCount"
-            :disabled="raffleStarted"
+            :disabled="raffleStarted || selectedRaffleTypeId !== 'custom'"
           />
         </div>
       </div>
@@ -56,7 +84,7 @@
             min="1"
             max="500"
             v-model.number="participantCount"
-            :disabled="raffleStarted"
+            :disabled="raffleStarted || selectedRaffleTypeId !== 'custom'"
           />
         </div>
         <p v-if="participantCount < giftCount" class="error-text">
@@ -216,6 +244,41 @@ type Assignment = {
   participantName: string;
 };
 
+type RafflePresetId = 'initial' | 'primary';
+type RaffleTypeId = 'custom' | RafflePresetId;
+
+type RafflePreset = {
+  id: RafflePresetId;
+  nameKey: string;
+  descriptionKey: string;
+  participants: string[];
+};
+
+const rafflePresets: RafflePreset[] = [
+  {
+    id: 'initial',
+    nameKey: 'raffle.initialName',
+    descriptionKey: 'raffle.initialDescription',
+    participants: ['Nadia', 'Tania', 'Jhoss', 'Ruth', 'Maida', 'Ibeth'],
+  },
+  {
+    id: 'primary',
+    nameKey: 'raffle.primaryName',
+    descriptionKey: 'raffle.primaryDescription',
+    participants: [
+      'Laura',
+      'Erika',
+      'Maria',
+      'Leidi',
+      'Andy',
+      'Jhan',
+      'Wally',
+      'Nélida',
+      'Pilar',
+    ],
+  },
+];
+
 const giftCount = ref(15);
 const participantCount = ref(15);
 
@@ -232,6 +295,8 @@ const isSpinning = ref(false);
 const spinParticipants = ref<Participant[]>([]);
 const rouletteIndex = ref(0);
 const activeGift = ref<Gift | null>(null);
+
+const selectedRaffleTypeId = ref<RaffleTypeId>('custom');
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value as 'es' | 'en');
@@ -270,15 +335,56 @@ function initPools() {
 
   remainingGifts.value = Array.from({ length: giftCount.value }, (_, i) => ({
     id: i + 1,
-    label: `Gift ${i + 1}`,
+    label: t('gifts.giftLabel', { id: i + 1 }),
   }));
 
+  resetCoreState();
+}
+
+function resetCoreState() {
   assignments.value = [];
   raffleStarted.value = false;
   lastWinner.value = null;
   spinParticipants.value = [];
   isSpinning.value = false;
   activeGift.value = null;
+}
+
+function loadPreset(id: RafflePresetId) {
+  const preset = rafflePresets.find((p) => p.id === id);
+  if (!preset) return;
+
+  participantCount.value = preset.participants.length;
+  giftCount.value = preset.participants.length;
+
+  remainingParticipants.value = preset.participants.map((name, index) => ({
+    id: index + 1,
+    name,
+  }));
+
+  remainingGifts.value = Array.from({ length: giftCount.value }, (_, i) => ({
+    id: i + 1,
+    label: t('gifts.giftLabel', { id: i + 1 }),
+  }));
+
+  resetCoreState();
+}
+
+function applyRaffleType(id: RaffleTypeId) {
+  if (selectedRaffleTypeId.value === id) return;
+
+  if (raffleStarted.value || assignments.value.length) {
+    const confirmed = window.confirm(t('raffle.changeConfirm'));
+    if (!confirmed) return;
+  }
+
+  selectedRaffleTypeId.value = id;
+
+  if (id === 'custom') {
+    initPools();
+  } else {
+    loadPreset(id);
+  }
 }
 
 function drawNext() {
@@ -374,7 +480,11 @@ function drawNext() {
 }
 
 function resetRaffle() {
-  initPools();
+  if (selectedRaffleTypeId.value === 'custom') {
+    initPools();
+  } else {
+    loadPreset(selectedRaffleTypeId.value as RafflePresetId);
+  }
 }
 
 onMounted(() => {
@@ -382,8 +492,12 @@ onMounted(() => {
 });
 
 watch([giftCount, participantCount], () => {
-  if (!raffleStarted.value) {
+  if (raffleStarted.value) return;
+
+  if (selectedRaffleTypeId.value === 'custom') {
     initPools();
+  } else {
+    loadPreset(selectedRaffleTypeId.value as RafflePresetId);
   }
 });
 </script>

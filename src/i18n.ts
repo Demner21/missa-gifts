@@ -44,6 +44,17 @@ const messages = {
     layout: {
       language: 'Idioma',
     },
+    raffle: {
+      typeLabel: 'Tipo de sorteo',
+      customName: 'Personalizado',
+      customDescription: 'Define manualmente los participantes.',
+      initialName: 'Sorteo profesores inicial',
+      initialDescription: 'Sorteo con {count} participantes predefinidos.',
+      primaryName: 'Sorteo profesores primaria + talleristas',
+      primaryDescription: 'Sorteo con {count} participantes predefinidos.',
+      changeConfirm:
+        'Cambiar el tipo de sorteo reiniciará el estado actual. ¿Quieres continuar?',
+    },
   },
   en: {
     app: {
@@ -87,6 +98,17 @@ const messages = {
     },
     layout: {
       language: 'Language',
+    },
+    raffle: {
+      typeLabel: 'Raffle type',
+      customName: 'Custom',
+      customDescription: 'Manually define the participants.',
+      initialName: 'Initial raffle',
+      initialDescription: 'Raffle with {count} predefined participants.',
+      primaryName: 'Primary raffle',
+      primaryDescription: 'Raffle with {count} predefined participants.',
+      changeConfirm:
+        'Changing the raffle type will reset the current state. Do you want to continue?',
     },
   },
 } as const;
