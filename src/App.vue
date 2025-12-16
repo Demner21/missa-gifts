@@ -285,6 +285,13 @@
             &nbsp;{{ nextInstructionParticipant.participantName }}
           </p>
 
+          <div
+            v-if="isInstructionSpinning && currentInstructionText"
+            class="instruction-roulette"
+          >
+            {{ currentInstructionText }}
+          </div>
+
           <div v-if="lastInstructionResult" class="instruction-result-card">
             <p class="instruction-participant">
               {{ lastInstructionResult.participantName }}
@@ -434,6 +441,8 @@ const ownership = ref<Record<number, number>>({});
 const lastInstructionResult = ref<InstructionResult | null>(null);
 const isInstructionSpinning = ref(false);
 const remainingInstructions = ref<InstructionConfig[]>([]);
+const spinInstructions = ref<InstructionConfig[]>([]);
+const instructionRouletteIndex = ref(0);
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value as 'es' | 'en');
@@ -461,6 +470,13 @@ const rouletteDisplayName = computed(() => {
   if (!spinParticipants.value.length) return '';
   const p = spinParticipants.value[rouletteIndex.value % spinParticipants.value.length];
   return displayParticipantName(p.id, p.name);
+});
+
+const currentInstructionText = computed(() => {
+  if (!isInstructionSpinning.value) return '';
+  if (!spinInstructions.value.length) return '';
+  const inst = spinInstructions.value[instructionRouletteIndex.value % spinInstructions.value.length];
+  return currentLocale.value === 'es' ? inst.textEs : inst.textEn;
 });
 
 const nextInstructionParticipant = computed(() => {
@@ -509,6 +525,8 @@ function resetCoreState() {
   lastInstructionResult.value = null;
   isInstructionSpinning.value = false;
   remainingInstructions.value = [];
+  spinInstructions.value = [];
+  instructionRouletteIndex.value = 0;
 }
 
 function loadPreset(id: RafflePresetId) {
@@ -665,65 +683,108 @@ function assignNextInstruction() {
     return;
   }
   isInstructionSpinning.value = true;
-
   const current = assignments.value[instructionIndex.value];
   const participantId = current.participantId;
   const participantName = current.participantName;
 
-  const map: Record<number, number> = { ...ownership.value };
+  const participantsCount = assignments.value.length;
+  const instructionsSnapshot = [...remainingInstructions.value];
+  const instructionsCount = instructionsSnapshot.length;
 
-  if (!(participantId in map)) {
-    map[participantId] = current.giftId;
-  }
+  spinInstructions.value = instructionsSnapshot;
 
-  const beforeGiftId = map[participantId];
+  const winnerIndex = Math.floor(Math.random() * instructionsCount);
+  const rounds = 3 + Math.floor(Math.random() * 3); // 3–5 full cycles
+  const totalSteps = rounds * instructionsCount + winnerIndex;
 
-  const n = assignments.value.length;
-  const randomIndex = Math.floor(Math.random() * remainingInstructions.value.length);
-  const [rawInstruction] = remainingInstructions.value.splice(randomIndex, 1);
+  let step = 0;
+  let localIndex = 0;
 
-  if (rawInstruction.type === 'swap_next' || rawInstruction.type === 'swap_prev') {
-    const offset = rawInstruction.type === 'swap_next' ? 1 : -1;
-    const targetIndex = (instructionIndex.value + offset + n) % n;
-    const target = assignments.value[targetIndex];
-    const targetId = target.participantId;
+  const baseInterval = 60;
+  const maxInterval = 260;
 
-    if (!(targetId in map)) {
-      map[targetId] = target.giftId;
+  const spinStep = () => {
+    if (!isInstructionSpinning.value) return;
+
+    instructionRouletteIndex.value = localIndex % instructionsCount;
+    localIndex += 1;
+    step += 1;
+
+    if (step >= totalSteps) {
+      finishSpinInstruction(instructionsSnapshot[winnerIndex]);
+      return;
     }
 
-    const temp = map[participantId];
-    map[participantId] = map[targetId];
-    map[targetId] = temp;
-  }
+    const tNorm = step / totalSteps; // 0 → 1
+    const eased = tNorm * tNorm; // simple ease-out
+    const delay = baseInterval + (maxInterval - baseInterval) * eased;
 
-  ownership.value = map;
-
-  const instructionText = currentLocale.value === 'es'
-    ? rawInstruction.textEs
-    : rawInstruction.textEn;
-
-  const resultingGiftId = ownership.value[participantId];
-
-  lastInstructionResult.value = {
-    participantId,
-    participantName,
-    initialGiftId: beforeGiftId,
-    initialGiftLabel: t('gifts.giftLabel', { id: beforeGiftId }),
-    instructionText,
-    resultingGiftId,
-    resultingGiftLabel: t('gifts.giftLabel', { id: resultingGiftId }),
+    window.setTimeout(spinStep, delay);
   };
 
-  instructionIndex.value += 1;
+  const finishSpinInstruction = (chosen: InstructionConfig) => {
+    // Update ownership map based on chosen instruction
+    const map: Record<number, number> = { ...ownership.value };
 
-  if (instructionIndex.value >= assignments.value.length) {
-    phase.value = 'instructions-complete';
-  }
+    if (!(participantId in map)) {
+      map[participantId] = current.giftId;
+    }
 
-  window.setTimeout(() => {
+    const beforeGiftId = map[participantId];
+
+    if (chosen.type === 'swap_next' || chosen.type === 'swap_prev') {
+      const offset = chosen.type === 'swap_next' ? 1 : -1;
+      const targetIndex = (instructionIndex.value + offset + participantsCount) % participantsCount;
+      const target = assignments.value[targetIndex];
+      const targetId = target.participantId;
+
+      if (!(targetId in map)) {
+        map[targetId] = target.giftId;
+      }
+
+      const temp = map[participantId];
+      map[participantId] = map[targetId];
+      map[targetId] = temp;
+    }
+
+    ownership.value = map;
+
+    // Remove the chosen instruction from the remaining pool
+    const poolIndex = remainingInstructions.value.findIndex((i) => i.id === chosen.id);
+    if (poolIndex !== -1) {
+      remainingInstructions.value.splice(poolIndex, 1);
+    }
+
+    const instructionText = currentLocale.value === 'es'
+      ? chosen.textEs
+      : chosen.textEn;
+
+    const resultingGiftId = ownership.value[participantId];
+
+    lastInstructionResult.value = {
+      participantId,
+      participantName,
+      initialGiftId: beforeGiftId,
+      initialGiftLabel: t('gifts.giftLabel', { id: beforeGiftId }),
+      instructionText,
+      resultingGiftId,
+      resultingGiftLabel: t('gifts.giftLabel', { id: resultingGiftId }),
+    };
+
+    instructionIndex.value += 1;
+
+    if (
+      instructionIndex.value >= assignments.value.length ||
+      remainingInstructions.value.length === 0
+    ) {
+      phase.value = 'instructions-complete';
+    }
+
     isInstructionSpinning.value = false;
-  }, 500);
+    spinInstructions.value = [];
+  };
+
+  spinStep();
 }
 
 function resetRaffle() {

@@ -6,12 +6,6 @@
     "textEn": "Swap your gift with the person who always hangs out in the booms."
   },
   {
-    "id": "swap-random-3",
-    "type": "swap_random",
-    "textEs": "Intercambia tu regalo con la persona que crees que para yendo a \"Casita\" a tomar Pisco.",
-    "textEn": "Swap your gift with the person you think is going home to drink Pisco."
-  },
-  {
     "id": "shift-right-3",
     "type": "shift_right",
     "textEs": "Todos mueven su regalo 3 posiciones a la derecha.",
