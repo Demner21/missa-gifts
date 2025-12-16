@@ -39,6 +39,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
 }
 
 .app-header {
@@ -403,6 +405,40 @@ body {
   margin-top: 0.9rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.christmas-effect {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 10% 0%, rgba(248, 250, 252, 0.35) 0, transparent 45%),
+    radial-gradient(circle at 80% -10%, rgba(254, 249, 195, 0.45) 0, transparent 50%),
+    radial-gradient(circle at 20% -20%, rgba(248, 250, 252, 0.25) 0, transparent 40%),
+    radial-gradient(circle at 60% -10%, rgba(248, 250, 252, 0.3) 0, transparent 45%);
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: christmas-snowfall 4.5s ease-in-out forwards;
+}
+
+@keyframes christmas-snowfall {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 
 @media (max-width: 900px) {

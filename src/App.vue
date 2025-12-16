@@ -377,11 +377,16 @@
             class="btn btn-secondary"
             type="button"
             @click="resetRaffle"
+            :disabled="isFinalEffectActive"
           >
             {{ t('final.playAgain') }}
           </button>
         </div>
       </div>
+      <div
+        v-if="isFinalEffectActive"
+        class="christmas-effect"
+      />
     </section>
   </div>
 </template>
@@ -499,6 +504,7 @@ const remainingInstructions = ref<InstructionConfig[]>([]);
 const spinInstructions = ref<InstructionConfig[]>([]);
 const instructionRouletteIndex = ref(0);
 const instructionHistory = ref<InstructionResult[]>([]);
+const isFinalEffectActive = ref(false);
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value as 'es' | 'en');
@@ -862,6 +868,11 @@ function assignNextInstruction() {
 
 function startFinalCeremony() {
   phase.value = 'final-ceremony';
+  isFinalEffectActive.value = true;
+
+  window.setTimeout(() => {
+    isFinalEffectActive.value = false;
+  }, 4500);
 }
 
 function resetRaffle() {
