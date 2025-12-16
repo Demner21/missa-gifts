@@ -253,10 +253,26 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .list-item span {
   color: var(--muted);
+}
+
+.name-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.25rem 0.5rem;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.name-input::placeholder {
+  color: rgba(148, 163, 184, 0.7);
 }
 
 .empty {

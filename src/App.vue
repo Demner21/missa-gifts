@@ -65,7 +65,7 @@
     <section class="layout">
       <div class="column">
         <header class="column-header">
-          <h2 class="column-title">Remaining participants</h2>
+          <h2 class="column-title">Participants</h2>
           <span class="column-count">{{ remainingParticipants.length }}</span>
         </header>
         <ul v-if="remainingParticipants.length" class="list">
@@ -75,7 +75,18 @@
             class="list-item"
           >
             <span>#{{ p.id }}</span>
-            <span>{{ p.name }}</span>
+            <template v-if="!raffleStarted">
+              <input
+                class="name-input"
+                type="text"
+                v-model="p.name"
+                :placeholder="`Participant ${p.id}`"
+                maxlength="40"
+              />
+            </template>
+            <template v-else>
+              <span>{{ displayParticipantName(p.id, p.name) }}</span>
+            </template>
           </li>
         </ul>
         <p v-else class="empty">No participants left.</p>
@@ -179,10 +190,16 @@ const isDrawDisabled = computed(() => {
   return false;
 });
 
+function displayParticipantName(id: number, rawName: string): string {
+  const trimmed = rawName.trim();
+  if (!trimmed) return `Participant ${id}`;
+  return trimmed;
+}
+
 function initPools() {
   remainingParticipants.value = Array.from({ length: participantCount.value }, (_, i) => ({
     id: i + 1,
-    name: `Participant ${i + 1}`,
+    name: '',
   }));
 
   remainingGifts.value = Array.from({ length: giftCount.value }, (_, i) => ({
@@ -212,7 +229,7 @@ function drawNext() {
     giftId: gift.id,
     giftLabel: gift.label,
     participantId: winner.id,
-    participantName: winner.name,
+    participantName: displayParticipantName(winner.id, winner.name),
   };
 
   assignments.value.push(assignment);
