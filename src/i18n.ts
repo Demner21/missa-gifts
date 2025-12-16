@@ -1,0 +1,114 @@
+import { createI18n } from 'vue-i18n';
+
+const messages = {
+  es: {
+    app: {
+      title: 'Sorteo de regalos',
+      subtitle: 'Asigna regalos únicos a participantes sin repetir.',
+      techBadge: 'En memoria · Vite + Vue 3 + TS',
+    },
+    controls: {
+      giftsLabel: 'Regalos',
+      participantsLabel: 'Participantes',
+      total: 'Total',
+      drawNext: 'Sortear siguiente regalo',
+      reset: 'Reiniciar sorteo',
+      validationParticipantsGteGifts:
+        'El número de participantes debe ser mayor o igual al número de regalos para evitar regalos sin asignar.',
+    },
+    participants: {
+      columnTitle: 'Participantes',
+      placeholder: 'Participante {id}',
+      empty: 'No quedan participantes.',
+    },
+    gifts: {
+      columnTitle: 'Regalos restantes',
+      currentLabel: 'Sorteando ahora',
+      empty: 'Todos los regalos han sido asignados.',
+      giftLabel: 'Regalo {id}',
+    },
+    roulette: {
+      drawingLabel: 'Sorteando {gift}',
+      spotlight: 'está en la rueda…',
+    },
+    assignments: {
+      columnTitle: 'Regalos asignados',
+      tableGift: 'Regalo',
+      tableWinner: 'Ganador',
+      pillGift: 'Regalo',
+      pillParticipant: 'Participante',
+      empty: 'Aún no hay asignaciones. ¡Empieza el sorteo!',
+      lastDrawLabel: 'Último sorteo',
+      winnerWonGift: 'ganó {gift}',
+    },
+    layout: {
+      language: 'Idioma',
+    },
+  },
+  en: {
+    app: {
+      title: 'Gift raffle',
+      subtitle: 'Randomly assign unique gifts to participants with no repeats.',
+      techBadge: 'In-memory · Vite + Vue 3 + TS',
+    },
+    controls: {
+      giftsLabel: 'Gifts',
+      participantsLabel: 'Participants',
+      total: 'Total',
+      drawNext: 'Draw next gift',
+      reset: 'Reset raffle',
+      validationParticipantsGteGifts:
+        'Participants should be ≥ gifts to avoid unassigned gifts.',
+    },
+    participants: {
+      columnTitle: 'Participants',
+      placeholder: 'Participant {id}',
+      empty: 'No participants left.',
+    },
+    gifts: {
+      columnTitle: 'Remaining gifts',
+      currentLabel: 'Drawing now',
+      empty: 'All gifts have been assigned.',
+      giftLabel: 'Gift {id}',
+    },
+    roulette: {
+      drawingLabel: 'Drawing {gift}',
+      spotlight: 'is in the spotlight…',
+    },
+    assignments: {
+      columnTitle: 'Assigned gifts',
+      tableGift: 'Gift',
+      tableWinner: 'Winner',
+      pillGift: 'Gift',
+      pillParticipant: 'Participant',
+      empty: 'No assignments yet. Draw your first gift!',
+      lastDrawLabel: 'Last draw',
+      winnerWonGift: 'won {gift}',
+    },
+    layout: {
+      language: 'Language',
+    },
+  },
+} as const;
+
+export type AppLocale = keyof typeof messages;
+
+function detectInitialLocale(): AppLocale {
+  if (typeof navigator !== 'undefined') {
+    const lang = navigator.language || navigator.languages?.[0];
+    if (lang) {
+      if (lang.toLowerCase().startsWith('es')) return 'es';
+      if (lang.toLowerCase().startsWith('en')) return 'en';
+    }
+  }
+  return 'es';
+}
+
+export const i18n = createI18n({
+  legacy: false,
+  locale: detectInitialLocale(),
+  fallbackLocale: 'es',
+  messages,
+});
+
+export default i18n;
