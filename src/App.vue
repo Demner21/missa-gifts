@@ -13,7 +13,10 @@
             <span v-else-if="phase === 'instructions'">
               {{ t('instructions.phaseInstructions') }}
             </span>
-            <span v-else>{{ t('instructions.phaseComplete') }}</span>
+            <span v-else-if="phase === 'instructions-complete'">
+              {{ t('instructions.phaseComplete') }}
+            </span>
+            <span v-else>{{ t('instructions.phaseFinal') }}</span>
           </span>
         </div>
         <div class="badge">
@@ -102,7 +105,10 @@
         </p>
       </div>
 
-      <div class="buttons">
+      <div
+        v-if="phase !== 'final-ceremony'"
+        class="buttons"
+      >
         <button
           class="btn btn-primary"
           type="button"
@@ -128,13 +134,21 @@
           {{ t('instructions.startPhase') }}
         </button>
         <button
-          v-else
+          v-else-if="phase === 'instructions'"
           class="btn btn-primary"
           type="button"
           @click="assignNextInstruction"
           :disabled="isAssignInstructionDisabled"
         >
           {{ t('instructions.assignOne') }}
+        </button>
+        <button
+          v-else-if="phase === 'instructions-complete'"
+          class="btn btn-primary"
+          type="button"
+          @click="startFinalCeremony"
+        >
+          {{ t('final.summaryTitle') }}
         </button>
       </div>
     </section>
@@ -260,7 +274,7 @@
     </section>
 
     <section
-      v-else
+      v-else-if="phase === 'instructions' || phase === 'instructions-complete'"
       class="layout"
     >
       <div class="column">
@@ -310,13 +324,6 @@
               <span class="instruction-label">{{ t('instructions.instructionLabel') }}:</span>
               <span class="instruction-value">{{ lastInstructionResult.instructionText }}</span>
             </p>
-            <p class="instruction-line">
-              <span class="instruction-label">{{ t('instructions.resultingGiftLabel') }}:</span>
-              <span class="instruction-value">
-                #{{ lastInstructionResult.resultingGiftId }} ·
-                {{ lastInstructionResult.resultingGiftLabel }}
-              </span>
-            </p>
           </div>
 
           <p
@@ -325,6 +332,54 @@
           >
             {{ t('instructions.allDone') }}
           </p>
+        </div>
+      </div>
+    </section>
+    <section
+      v-else
+      class="layout final-layout"
+    >
+      <div class="column final-column">
+        <header class="column-header">
+          <h2 class="column-title">{{ t('final.title') }}</h2>
+        </header>
+        <p class="final-subtitle">{{ t('final.subtitle') }}</p>
+
+        <h3 class="final-summary-title">{{ t('final.summaryTitle') }}</h3>
+
+        <table
+          v-if="revealedFinalRows.length"
+          class="assignments-table final-table"
+        >
+          <thead>
+            <tr>
+              <th>{{ t('final.headerParticipant') }}</th>
+              <th>{{ t('final.headerGift') }}</th>
+              <th>{{ t('final.headerInstruction') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in revealedFinalRows"
+              :key="row.assignment.giftId"
+              class="final-row-visible"
+            >
+              <td>{{ displayParticipantName(row.assignment.participantId, row.assignment.participantName) }}</td>
+              <td>{{ row.assignment.giftLabel }}</td>
+              <td>{{ row.instructionText || t('final.noInstruction') }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else class="empty">{{ t('assignments.empty') }}</p>
+
+        <div class="final-actions">
+          <button
+            class="btn btn-secondary"
+            type="button"
+            @click="resetRaffle"
+          >
+            {{ t('final.playAgain') }}
+          </button>
         </div>
       </div>
     </section>
@@ -402,7 +457,7 @@ type InstructionConfig = {
   textEn: string;
 };
 
-type Phase = 'raffle' | 'instructions' | 'instructions-complete';
+type Phase = 'raffle' | 'instructions' | 'instructions-complete' | 'final-ceremony';
 
 type InstructionResult = {
   participantId: number;
@@ -443,6 +498,7 @@ const isInstructionSpinning = ref(false);
 const remainingInstructions = ref<InstructionConfig[]>([]);
 const spinInstructions = ref<InstructionConfig[]>([]);
 const instructionRouletteIndex = ref(0);
+const instructionHistory = ref<InstructionResult[]>([]);
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value as 'es' | 'en');
@@ -492,6 +548,18 @@ const isAssignInstructionDisabled = computed(
     remainingInstructions.value.length === 0,
 );
 
+const revealedFinalRows = computed(() =>
+  assignments.value.map((assignment) => {
+    const history = instructionHistory.value.find(
+      (h) => h.participantId === assignment.participantId,
+    );
+    return {
+      assignment,
+      instructionText: history?.instructionText ?? '',
+    };
+  }),
+);
+
 function displayParticipantName(id: number, rawName: string): string {
   const trimmed = rawName.trim();
   if (!trimmed) return t('participants.placeholder', { id });
@@ -527,6 +595,7 @@ function resetCoreState() {
   remainingInstructions.value = [];
   spinInstructions.value = [];
   instructionRouletteIndex.value = 0;
+  instructionHistory.value = [];
 }
 
 function loadPreset(id: RafflePresetId) {
@@ -578,6 +647,7 @@ function startInstructionsPhase() {
   instructionIndex.value = 0;
   lastInstructionResult.value = null;
   remainingInstructions.value = [...instructions];
+  instructionHistory.value = [];
   phase.value = 'instructions';
 }
 
@@ -761,7 +831,7 @@ function assignNextInstruction() {
 
     const resultingGiftId = ownership.value[participantId];
 
-    lastInstructionResult.value = {
+    const result: InstructionResult = {
       participantId,
       participantName,
       initialGiftId: beforeGiftId,
@@ -770,6 +840,9 @@ function assignNextInstruction() {
       resultingGiftId,
       resultingGiftLabel: t('gifts.giftLabel', { id: resultingGiftId }),
     };
+
+    lastInstructionResult.value = result;
+    instructionHistory.value.push(result);
 
     instructionIndex.value += 1;
 
@@ -785,6 +858,10 @@ function assignNextInstruction() {
   };
 
   spinStep();
+}
+
+function startFinalCeremony() {
+  phase.value = 'final-ceremony';
 }
 
 function resetRaffle() {

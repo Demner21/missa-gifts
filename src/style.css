@@ -373,6 +373,38 @@ body {
   gap: 1rem;
 }
 
+.final-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.final-column {
+  align-items: stretch;
+}
+
+.final-subtitle {
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.final-summary-title {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.final-table {
+  margin-top: 0.35rem;
+}
+
+.final-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     padding-inline: 1.1rem;
